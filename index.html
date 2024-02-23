@@ -1,0 +1,83 @@
+<html>
+  <head>
+    <script type="module">
+      class TextDe extends HTMLElement {
+	  constructor() {
+	      super();
+	  }
+      }
+
+      customElements.define("text-de", TextDe);
+
+      class TextEn extends HTMLElement {
+	  constructor() {
+	      super();
+	  }
+      }
+
+      customElements.define("text-en", TextEn);
+
+      const componentMapping = {
+	  de: "text-de",
+	  en: "text-en"
+      }
+      
+      class LocalizedText extends HTMLElement {
+	  static observedAttributes = ["lang"];
+	  
+	  constructor() {
+	      super();
+	      this._slot = document.createElement("slot");
+	  }
+
+	  localize() {
+	      const lang = this.getAttribute("lang");
+	      const componentTag = componentMapping[lang];
+	      const availableLocalizations = this._slot.assignedElements();
+	      let success = false;
+	      
+	      for (const localization of availableLocalizations) {
+		  if (localization.tagName === componentTag?.toUpperCase()) {
+		      localization.style.display = "initial";
+		      success = true;
+		  }
+		  else {
+		      localization.style.display = "none";
+		  }
+	      }
+	  }
+
+	  attributeChangedCallback(name, oldValue, newValue) {
+	      if (name !== "lang") return;
+	      
+	      this.localize();
+	  }
+
+	  connectedCallback() {
+	      const shadow = this.attachShadow({ mode: "closed" });
+	      shadow.appendChild(this._slot);
+
+	      this.localize();
+	  }
+      }
+
+      customElements.define("localized-text", LocalizedText);
+
+      document.querySelector("button").onclick = () => {
+	  const localizedText = document.querySelector('localized-text');
+	  const lang = localizedText.getAttribute("lang");
+	  localizedText.setAttribute("lang", lang === "de" ? "en" : "de");
+      }
+    </script>
+    <body>
+      <h1 style="font-family: monospace">
+	<localized-text lang="de">
+	  <text-de>deutsch</text-de>
+	  <text-en>english</text-de>
+	</localized-text>
+      </h1>
+      <button>change lang</button>
+    </body>
+  </head>
+</html>
+
